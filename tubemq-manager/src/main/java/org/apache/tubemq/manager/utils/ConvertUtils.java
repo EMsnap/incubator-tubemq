@@ -25,8 +25,13 @@ import java.lang.reflect.Field;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.tubemq.manager.controller.topic.request.RebalanceConsumerReq;
+import org.apache.tubemq.manager.controller.topic.request.RebalanceGroupReq;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.OP_MODIFY;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.OP_QUERY;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.REBALANCE_GROUP;
 
 @Slf4j
 public class ConvertUtils {
@@ -70,5 +75,18 @@ public class ConvertUtils {
         }
 
         return StringUtils.join(queryList, "&");
+    }
+
+
+    public static RebalanceConsumerReq convertToRebalanceConsumerReq(RebalanceGroupReq req, String consumerId) {
+        RebalanceConsumerReq consumerReq = new RebalanceConsumerReq();
+        consumerReq.setConsumerId(consumerId);
+        consumerReq.setConfModAuthToken(req.getConfModAuthToken());
+        consumerReq.setGroupName(req.getGroupName());
+        consumerReq.setModifyUser(req.getModifyUser());
+        consumerReq.setReJoinWait(req.getReJoinWait());
+        consumerReq.setType(OP_MODIFY);
+        consumerReq.setMethod(REBALANCE_GROUP);
+        return consumerReq;
     }
 }
