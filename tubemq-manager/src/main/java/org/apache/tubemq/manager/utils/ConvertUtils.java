@@ -18,37 +18,77 @@
 package org.apache.tubemq.manager.utils;
 
 import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.tubemq.manager.controller.topic.request.RebalanceConsumerReq;
+import org.apache.tubemq.manager.controller.topic.request.RebalanceGroupReq;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.OP_MODIFY;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.OP_QUERY;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.REBALANCE_GROUP;
 
+
+@Slf4j
 public class ConvertUtils {
 
     public static Gson gson = new Gson();
 
-    public static String convertReqToQueryStr(Object req) throws Exception {
+    public static String convertReqToQueryStr(Object req) {
         List<String> queryList = new ArrayList<>();
         Class<?> clz = req.getClass();
-        Field[] fields = clz.getDeclaredFields();
-        for (Field field : fields) {
-            field.setAccessible(true);
-            Object o = field.get(req);
-            String value;
-            // convert list to json string
-            if (o == null) continue;
-            if (o instanceof List) {
-                value = gson.toJson(o);
-            } else {
-                value = o.toString();
-            }
-            queryList.add(field.getName() + "=" + URLEncoder.encode(
-                    value, UTF_8.toString()));
+        List fieldsList = new ArrayList<Field[]>();
+
+        while (clz != null) {
+            Field[] declaredFields = clz.getDeclaredFields();
+            fieldsList.add(declaredFields);
+            clz = clz.getSuperclass();
         }
+
+        try {
+            for (Object fields : fieldsList) {
+                Field[] f = (Field[]) fields;
+                for (Field field : f) {
+                    field.setAccessible(true);
+                    Object o = null;
+                    o = field.get(req);
+                    String value;
+                    // convert list to json string
+                    if (o == null) {
+                        continue;
+                    }
+                    if (o instanceof List) {
+                        value = gson.toJson(o);
+                    } else {
+                        value = o.toString();
+                    }
+                    queryList.add(field.getName() + "=" + URLEncoder.encode(
+                        value, UTF_8.toString()));
+                }
+            }
+        } catch (Exception e) {
+            log.error("exception during generating url", e);
+            return null;
+        }
+
         return StringUtils.join(queryList, "&");
+    }
+
+
+    public static RebalanceConsumerReq convertToRebalanceConsumerReq(RebalanceGroupReq req, String consumerId) {
+        RebalanceConsumerReq consumerReq = new RebalanceConsumerReq();
+        consumerReq.setConsumerId(consumerId);
+        consumerReq.setConfModAuthToken(req.getConfModAuthToken());
+        consumerReq.setGroupName(req.getGroupName());
+        consumerReq.setModifyUser(req.getModifyUser());
+        consumerReq.setReJoinWait(req.getReJoinWait());
+        consumerReq.setType(OP_MODIFY);
+        consumerReq.setMethod(REBALANCE_GROUP);
+        return consumerReq;
     }
 }

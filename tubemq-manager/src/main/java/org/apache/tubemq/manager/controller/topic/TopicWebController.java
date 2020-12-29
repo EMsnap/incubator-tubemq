@@ -18,30 +18,29 @@
 
 package org.apache.tubemq.manager.controller.topic;
 
+import static org.apache.tubemq.manager.utils.MasterUtils.queryMaster;
+import static org.apache.tubemq.manager.utils.MasterUtils.requestMaster;
+
 import com.google.gson.Gson;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tubemq.manager.controller.TubeMQResult;
 import org.apache.tubemq.manager.controller.node.request.BatchAddTopicReq;
 import org.apache.tubemq.manager.controller.node.request.CloneTopicReq;
+import org.apache.tubemq.manager.controller.topic.request.RebalanceGroupReq;
 import org.apache.tubemq.manager.entry.NodeEntry;
-import org.apache.tubemq.manager.entry.TopicEntry;
-import org.apache.tubemq.manager.entry.TopicStatus;
-import org.apache.tubemq.manager.exceptions.TubeMQManagerException;
 import org.apache.tubemq.manager.repository.NodeRepository;
 import org.apache.tubemq.manager.repository.TopicRepository;
 import org.apache.tubemq.manager.service.NodeService;
 import org.apache.tubemq.manager.service.TopicBackendWorker;
-import org.apache.tubemq.manager.service.TopicFuture;
+import org.apache.tubemq.manager.utils.MasterUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -62,6 +61,9 @@ public class TopicWebController {
     private NodeRepository nodeRepository;
 
     public Gson gson = new Gson();
+
+    @Autowired
+    private MasterUtils masterUtils;
 
     /**
      * add topic to brokers
@@ -96,5 +98,104 @@ public class TopicWebController {
             return TubeMQResult.getErrorResult("no such cluster");
         return nodeService.cloneTopicToBrokers(req, masterEntry);
     }
+
+    /**
+     * batch modify topic config
+     * @param req
+     * @return
+     * @throws Exception
+     */
+    @PostMapping("/modify")
+    public @ResponseBody String modifyTopics(
+        @RequestParam Map<String, String> req) throws Exception {
+        String url = masterUtils.getQueryUrl(req);
+        return queryMaster(url);
+    }
+
+    /**
+     * batch delete topic info
+     * @param req
+     * @return
+     * @throws Exception
+     */
+    @PostMapping("/delete")
+    public @ResponseBody String deleteTopics(
+        @RequestParam Map<String, String> req) throws Exception {
+        String url = masterUtils.getQueryUrl(req);
+        return queryMaster(url);
+    }
+
+
+    /**
+     * batch remove topics
+     * @param req
+     * @return
+     * @throws Exception
+     */
+    @PostMapping("/remove")
+    public @ResponseBody String removeTopics(
+        @RequestParam Map<String, String> req) throws Exception {
+        String url = masterUtils.getQueryUrl(req);
+        return queryMaster(url);
+    }
+
+    /**
+     * query consumer auth control, shows all consumer groups
+     * @param req
+     * @return
+     * @throws Exception
+     */
+    @PostMapping("/query/consumer-auth")
+    public @ResponseBody String queryConsumerAuth(
+        @RequestParam Map<String, String> req) throws Exception {
+        String url = masterUtils.getQueryUrl(req);
+        return queryMaster(url);
+    }
+
+    /**
+     * query topic config info
+     * @param req
+     * @return
+     * @throws Exception
+     */
+    public @ResponseBody String queryTopicConfig(
+        @RequestParam Map<String, String> req) throws Exception {
+        String url = masterUtils.getQueryUrl(req);
+        return queryMaster(url);
+    }
+
+    /**
+     * rebalance consumer given consumer id
+     * @param req
+     * @return
+     * @throws Exception
+     */
+    @GetMapping("/rebalance/consumer")
+    public @ResponseBody TubeMQResult rebalanceConsumer(
+        @RequestParam Map<String, String> req) throws Exception {
+        String url = masterUtils.getQueryUrl(req);
+        return requestMaster(url);
+    }
+
+
+    /**
+     * rebalance all consumers in group
+     * @param req
+     * @return
+     * @throws Exception
+     */
+    @PostMapping("/rebalance/group")
+    public @ResponseBody TubeMQResult rebalanceGroup(
+        @RequestBody RebalanceGroupReq req) throws Exception {
+
+        if (req.getClusterId() == null)
+            return TubeMQResult.getErrorResult("please input clusterId");
+        NodeEntry masterEntry = nodeRepository.findNodeEntryByClusterIdIsAndMasterIsTrue(
+            req.getClusterId());
+        if (masterEntry == null)
+            return TubeMQResult.getErrorResult("no such cluster");
+        return nodeService.rebalanceGroup(req, masterEntry);
+    }
+
 
 }

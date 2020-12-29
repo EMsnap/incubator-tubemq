@@ -21,14 +21,17 @@ package org.apache.tubemq.manager.service;
 import static org.apache.tubemq.manager.controller.node.request.AddBrokersReq.getAddBrokerReq;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.ADD_TUBE_TOPIC;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.BROKER_RUN_STATUS;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.QUERY_GROUP_DETAIL_INFO;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.RELOAD_BROKER;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.SCHEMA;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.TOPIC_CONFIG_INFO;
 import static org.apache.tubemq.manager.utils.ConvertUtils.convertReqToQueryStr;
+import static org.apache.tubemq.manager.utils.ConvertUtils.convertToRebalanceConsumerReq;
 import static org.apache.tubemq.manager.utils.MasterUtils.*;
 
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
+import com.sun.xml.internal.ws.api.pipe.Tube;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
@@ -47,6 +50,8 @@ import org.apache.tubemq.manager.controller.node.request.AddTopicReq;
 import org.apache.tubemq.manager.controller.node.request.CloneBrokersReq;
 import org.apache.tubemq.manager.controller.node.request.CloneTopicReq;
 import org.apache.tubemq.manager.controller.node.request.QueryBrokerCfgReq;
+import org.apache.tubemq.manager.controller.topic.request.RebalanceConsumerReq;
+import org.apache.tubemq.manager.controller.topic.request.RebalanceGroupReq;
 import org.apache.tubemq.manager.entry.NodeEntry;
 import org.apache.tubemq.manager.repository.NodeRepository;
 import org.apache.tubemq.manager.service.tube.*;
@@ -120,6 +125,24 @@ public class NodeService {
             }
         } catch (Exception ex) {
             log.error("exception caught while requesting broker status", ex);
+        }
+        return null;
+    }
+
+
+    private TubeHttpGroupDetailInfo requestGroupRunInfo(NodeEntry nodeEntry, String group) {
+        String url = SCHEMA + nodeEntry.getIp() + ":" + nodeEntry.getWebPort()
+            + QUERY_GROUP_DETAIL_INFO + "&consumeGroup=" + group;
+        HttpGet httpget = new HttpGet(url);
+        try (CloseableHttpResponse response = httpclient.execute(httpget)) {
+            TubeHttpGroupDetailInfo groupDetailInfo =
+                gson.fromJson(new InputStreamReader(response.getEntity().getContent()),
+                    TubeHttpGroupDetailInfo.class);
+            if (groupDetailInfo.getErrCode() == 0) {
+                return groupDetailInfo;
+            }
+        } catch (Exception ex) {
+            log.error("exception caught while requesting group status", ex);
         }
         return null;
     }
@@ -443,4 +466,32 @@ public class NodeService {
         return addTopicToBrokers(addTopicReq, master);
 
     }
+
+    public TubeMQResult rebalanceGroup(RebalanceGroupReq req, NodeEntry master) {
+
+        // 1. get all consumer ids in group
+        List<String> consumerIds = Objects
+            .requireNonNull(requestGroupRunInfo(master, req.getGroupName())).getConsumerIds();
+        RebalanceGroupResult rebalanceGroupResult = new RebalanceGroupResult();
+
+        // 2. rebalance consumers in group
+        consumerIds.forEach(consumerId -> {
+            RebalanceConsumerReq rebalanceConsumerReq = convertToRebalanceConsumerReq(req,
+                consumerId);
+            String url = SCHEMA + master.getIp() + ":" + master.getWebPort()
+                + "/" + TUBE_REQUEST_PATH + "?" + convertReqToQueryStr(rebalanceConsumerReq);
+            TubeMQResult result = requestMaster(url);
+            if (result.getErrCode() != 0) {
+                rebalanceGroupResult.getFailConsumers().add(consumerId);
+            }
+            rebalanceGroupResult.getSuccessConsumers().add(consumerId);
+        });
+
+        TubeMQResult tubeResult = new TubeMQResult();
+        tubeResult.setData(gson.toJson(rebalanceGroupResult));
+
+        return tubeResult;
+    }
+
+
 }

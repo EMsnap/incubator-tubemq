@@ -15,13 +15,15 @@
  * limitations under the License.
  */
 
-package org.apache.tubemq.manager.controller.node.request;
+package org.apache.tubemq.manager.controller.topic.request;
 
 import lombok.Data;
+import org.apache.tubemq.manager.controller.node.request.BaseReq;
 
 @Data
-public class BaseReq {
-    public String type;
-    public Integer clusterId;
-    public String method;
+public class RebalanceGroupReq extends BaseReq {
+    public String groupName;
+    public String confModAuthToken;
+    public Integer reJoinWait;
+    public String modifyUser;
 }

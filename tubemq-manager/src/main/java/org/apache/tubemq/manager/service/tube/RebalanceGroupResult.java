@@ -15,13 +15,16 @@
  * limitations under the License.
  */
 
-package org.apache.tubemq.manager.controller.node.request;
 
+package org.apache.tubemq.manager.service.tube;
+
+import com.google.common.collect.Lists;
+import java.util.List;
 import lombok.Data;
 
 @Data
-public class BaseReq {
-    public String type;
-    public Integer clusterId;
-    public String method;
+public class RebalanceGroupResult {
+    public List<String> failConsumers = Lists.newArrayList();
+
+    public List<String> successConsumers = Lists.newArrayList();
 }
