@@ -29,6 +29,7 @@ import com.google.gson.Gson;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tubemq.manager.controller.TubeMQResult;
+import org.apache.tubemq.manager.controller.group.request.DeleteOffsetReq;
 import org.apache.tubemq.manager.controller.node.request.CloneOffsetReq;
 import org.apache.tubemq.manager.controller.topic.request.BatchAddGroupAuthReq;
 import org.apache.tubemq.manager.controller.topic.request.DeleteGroupReq;
@@ -54,12 +55,6 @@ public class GroupController {
 
     public static final String DELETE = "delete";
 
-    @Autowired
-    private NodeService nodeService;
-
-    @Autowired
-    private NodeRepository nodeRepository;
-
     public Gson gson = new Gson();
 
     @Autowired
@@ -74,40 +69,13 @@ public class GroupController {
         @RequestParam String method, @RequestBody String req) throws Exception {
         switch (method) {
             case ADD:
-                return addConsumerGroup(gson.fromJson(req, BatchAddGroupAuthReq.class));
+                return topicService.addConsumer(gson.fromJson(req, BatchAddGroupAuthReq.class));
             case DELETE:
-                return deleteConsumerGroup(gson.fromJson(req, DeleteGroupReq.class));
+                return topicService.deleteConsumer(gson.fromJson(req, DeleteGroupReq.class));
             default:
                 return TubeMQResult.getErrorResult("no such method");
         }
-
     }
-
-
-
-    /**
-     * batch add consumer group for certain topic
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    public TubeMQResult addConsumerGroup(
-        BatchAddGroupAuthReq req) throws Exception {
-        return topicService.addConsumer(req);
-    }
-
-
-    /**
-     * delete consumer group for certain topic
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    public TubeMQResult deleteConsumerGroup(
-         DeleteGroupReq req) throws Exception {
-        return topicService.deleteConsumer(req);
-    }
-
 
     /**
      * query the consumer group for certain topic
@@ -125,27 +93,17 @@ public class GroupController {
 
     @PostMapping("/offset")
     public @ResponseBody TubeMQResult offsetMethodProxy(
-        @RequestParam String method, @RequestBody String req) throws Exception {
+        @RequestParam String method, @RequestBody String req) {
         switch (method) {
             case CLONE:
-                return cloneOffset(gson.fromJson(req, CloneOffsetReq.class));
+                return topicService.cloneOffset(gson.fromJson(req, CloneOffsetReq.class));
+            case DELETE:
+                return topicService.deleteOffset(gson.fromJson(req, DeleteOffsetReq.class));
             default:
                 return TubeMQResult.getErrorResult("no such method");
         }
 
     }
-
-    /**
-     * clone offset from one group to another
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    public TubeMQResult cloneOffset(
-         CloneOffsetReq req) {
-        return topicService.cloneOffset(req);
-    }
-
 
     /**
      * add group to black list for certain topic
@@ -186,8 +144,6 @@ public class GroupController {
         String url = masterUtils.getQueryUrl(req);
         return queryMaster(url);
     }
-
-
 
 
 }
