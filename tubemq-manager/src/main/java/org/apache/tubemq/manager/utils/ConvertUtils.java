@@ -18,6 +18,7 @@
 package org.apache.tubemq.manager.utils;
 
 import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
@@ -27,11 +28,12 @@ import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+@Slf4j
 public class ConvertUtils {
 
     public static Gson gson = new Gson();
 
-    public static String convertReqToQueryStr(Object req) throws Exception {
+    public static String convertReqToQueryStr(Object req) {
         List<String> queryList = new ArrayList<>();
         Class<?> clz = req.getClass();
         List fieldsList = new ArrayList<Field[]>();
@@ -42,24 +44,29 @@ public class ConvertUtils {
             clz = clz.getSuperclass();
         }
 
-        for (Object fields:fieldsList) {
-            Field[] f = (Field[]) fields;
-            for (Field field : f) {
-                field.setAccessible(true);
-                Object o = field.get(req);
-                String value;
-                // convert list to json string
-                if (o == null) {
-                    continue;
+        try {
+            for (Object fields:fieldsList) {
+                Field[] f = (Field[]) fields;
+                for (Field field : f) {
+                    field.setAccessible(true);
+                    Object o = field.get(req);
+                    String value;
+                    // convert list to json string
+                    if (o == null) {
+                        continue;
+                    }
+                    if (o instanceof List) {
+                        value = gson.toJson(o);
+                    } else {
+                        value = o.toString();
+                    }
+                    queryList.add(field.getName() + "=" + URLEncoder.encode(
+                        value, UTF_8.toString()));
                 }
-                if (o instanceof List) {
-                    value = gson.toJson(o);
-                } else {
-                    value = o.toString();
-                }
-                queryList.add(field.getName() + "=" + URLEncoder.encode(
-                    value, UTF_8.toString()));
             }
+        } catch (Exception e) {
+            log.error("exception occurred while parsing object {}", gson.toJson(req), e);
+            return StringUtils.EMPTY;
         }
 
         return StringUtils.join(queryList, "&");

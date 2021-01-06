@@ -18,6 +18,8 @@
 
 package org.apache.tubemq.manager.controller.topic;
 
+import static org.apache.tubemq.manager.controller.node.NodeController.ADD;
+import static org.apache.tubemq.manager.controller.node.NodeController.CLONE;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.SCHEMA;
 import static org.apache.tubemq.manager.utils.MasterUtils.TUBE_REQUEST_PATH;
 import static org.apache.tubemq.manager.utils.MasterUtils.queryMaster;
@@ -27,7 +29,9 @@ import com.google.gson.Gson;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tubemq.manager.controller.TubeMQResult;
+import org.apache.tubemq.manager.controller.node.request.AddBrokersReq;
 import org.apache.tubemq.manager.controller.node.request.BatchAddTopicReq;
+import org.apache.tubemq.manager.controller.node.request.CloneBrokersReq;
 import org.apache.tubemq.manager.controller.node.request.CloneOffsetReq;
 import org.apache.tubemq.manager.controller.node.request.CloneTopicReq;
 import org.apache.tubemq.manager.controller.topic.request.BatchAddGroupAuthReq;
@@ -37,6 +41,7 @@ import org.apache.tubemq.manager.repository.NodeRepository;
 import org.apache.tubemq.manager.repository.TopicRepository;
 import org.apache.tubemq.manager.service.NodeService;
 import org.apache.tubemq.manager.service.TopicBackendWorker;
+import org.apache.tubemq.manager.service.TopicService;
 import org.apache.tubemq.manager.utils.ConvertUtils;
 import org.apache.tubemq.manager.utils.MasterUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +68,9 @@ public class TopicWebController {
     private NodeService nodeService;
 
     @Autowired
+    private TopicService topicService;
+
+    @Autowired
     private NodeRepository nodeRepository;
 
     public Gson gson = new Gson();
@@ -71,11 +79,27 @@ public class TopicWebController {
     private MasterUtils masterUtils;
 
     /**
+     * broker method proxy
+     * divides the operation on broker to different method
+     */
+    @RequestMapping(value = "/")
+    public @ResponseBody TubeMQResult topicMethodProxy(
+        @RequestParam String method, @RequestBody String req) throws Exception {
+        switch (method) {
+            case ADD:
+                return addTopic(gson.fromJson(req, BatchAddTopicReq.class));
+            case CLONE:
+                return cloneTopic(gson.fromJson(req, CloneTopicReq.class));
+            default:
+                return TubeMQResult.getErrorResult("no such method");
+        }
+    }
+
+    /**
      * add topic to brokers
      * @param req
      * @return
      */
-    @PostMapping("/add")
     public TubeMQResult addTopic(@RequestBody BatchAddTopicReq req) {
         if (req.getClusterId() == null) {
             return TubeMQResult.getErrorResult("please input clusterId");
@@ -174,83 +198,6 @@ public class TopicWebController {
         return queryMaster(url);
     }
 
-    /**
-     * add group to black list for certain topic
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/add/blackGroup")
-    public @ResponseBody TubeMQResult addBlackGroup(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return requestMaster(url);
-    }
-
-    /**
-     * delete group to black list for certain topic
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/delete/blackGroup")
-    public @ResponseBody TubeMQResult deleteBlackGroup(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return requestMaster(url);
-    }
-
-    /**
-     * query the black list for certain topic
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/query/blackGroup")
-    public @ResponseBody String queryBlackGroup(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return queryMaster(url);
-    }
-
-    /**
-     * batch add consumer group for certain topic
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @PostMapping("/add/group")
-    public @ResponseBody TubeMQResult addConsumer(
-        @RequestBody BatchAddGroupAuthReq req) throws Exception {
-        NodeEntry nodeEntry =
-            nodeRepository.findNodeEntryByClusterIdIsAndMasterIsTrue(req.getClusterId());
-        if (nodeEntry == null) {
-            return TubeMQResult.getErrorResult("no such cluster");
-        }
-        String url = SCHEMA + nodeEntry.getIp() + ":" + nodeEntry.getWebPort()
-            + "/" + TUBE_REQUEST_PATH + "?" + ConvertUtils.convertReqToQueryStr(req);
-        return requestMaster(url);
-    }
-
-
-    /**
-     * delete consumer group for certain topic
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @PostMapping("/delete/group")
-    public @ResponseBody TubeMQResult deleteConsumer(
-        @RequestBody DeleteGroupReq req) throws Exception {
-        NodeEntry nodeEntry =
-            nodeRepository.findNodeEntryByClusterIdIsAndMasterIsTrue(req.getClusterId());
-        if (nodeEntry == null) {
-            return TubeMQResult.getErrorResult("no such cluster");
-        }
-        String url = SCHEMA + nodeEntry.getIp() + ":" + nodeEntry.getWebPort()
-            + "/" + TUBE_REQUEST_PATH + "?" + ConvertUtils.convertReqToQueryStr(req);
-        return requestMaster(url);
-    }
 
     /**
      * enable auth control for topics
@@ -276,40 +223,6 @@ public class TopicWebController {
         @RequestParam Map<String, String> req) throws Exception {
         String url = masterUtils.getQueryUrl(req);
         return requestMaster(url);
-    }
-
-    /**
-     * query the consumer group for certain topic
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/query/group")
-    public @ResponseBody String queryConsumer(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return queryMaster(url);
-    }
-
-
-    /**
-     * clone offset from one group to another
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @PostMapping("/clone/offset")
-    public @ResponseBody TubeMQResult cloneOffset(
-        @RequestBody CloneOffsetReq req) throws Exception {
-        if (req.getClusterId() == null) {
-            return TubeMQResult.getErrorResult("please input clusterId");
-        }
-        NodeEntry masterEntry = nodeRepository.findNodeEntryByClusterIdIsAndMasterIsTrue(
-            req.getClusterId());
-        if (masterEntry == null) {
-            return TubeMQResult.getErrorResult("no such cluster");
-        }
-        return nodeService.cloneOffsetToOtherGroups(req, masterEntry);
     }
 
 

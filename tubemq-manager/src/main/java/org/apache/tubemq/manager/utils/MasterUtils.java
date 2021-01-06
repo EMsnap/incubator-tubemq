@@ -69,7 +69,7 @@ public class MasterUtils {
 
 
 
-    public static TubeMQResult requestMaster(String url) throws Exception {
+    public static TubeMQResult requestMaster(String url) {
 
         log.info("start to request {}", url);
         HttpGet httpGet = new HttpGet(url);
