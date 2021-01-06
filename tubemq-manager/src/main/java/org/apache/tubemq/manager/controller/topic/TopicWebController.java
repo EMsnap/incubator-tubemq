@@ -23,6 +23,8 @@ import static org.apache.tubemq.manager.utils.MasterUtils.requestMaster;
 
 import static org.apache.tubemq.manager.controller.node.NodeController.ADD;
 import static org.apache.tubemq.manager.controller.node.NodeController.CLONE;
+import static org.apache.tubemq.manager.controller.node.NodeController.ADD;
+import static org.apache.tubemq.manager.controller.node.NodeController.CLONE;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.SCHEMA;
 import static org.apache.tubemq.manager.utils.MasterUtils.TUBE_REQUEST_PATH;
 import static org.apache.tubemq.manager.utils.MasterUtils.queryMaster;

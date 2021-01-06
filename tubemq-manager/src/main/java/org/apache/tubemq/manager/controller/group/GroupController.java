@@ -54,6 +54,12 @@ public class GroupController {
 
     public static final String DELETE = "delete";
 
+    @Autowired
+    private NodeService nodeService;
+
+    @Autowired
+    private NodeRepository nodeRepository;
+
     public Gson gson = new Gson();
 
     @Autowired
