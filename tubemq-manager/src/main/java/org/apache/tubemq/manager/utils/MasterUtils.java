@@ -28,6 +28,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.tubemq.manager.controller.TubeMQResult;
 import org.apache.tubemq.manager.controller.node.request.AddTopicReq;
+import org.apache.tubemq.manager.controller.node.request.BaseReq;
 import org.apache.tubemq.manager.entry.NodeEntry;
 import org.apache.tubemq.manager.repository.NodeRepository;
 import org.apache.tubemq.manager.service.tube.TubeHttpResponse;
@@ -129,6 +130,21 @@ public class MasterUtils {
                 + "/" + TUBE_REQUEST_PATH + "?" + covertMapToQueryString(queryBody);
         return requestMaster(url);
     }
+
+    public TubeMQResult redirectToMasterWithBaseReq(BaseReq req) {
+        if (req.getClusterId() == null) {
+            return TubeMQResult.getErrorResult("please input clusterId");
+        }
+        NodeEntry masterEntry = nodeRepository.findNodeEntryByClusterIdIsAndMasterIsTrue(
+            req.getClusterId());
+        if (masterEntry == null) {
+            return TubeMQResult.getErrorResult("no such cluster");
+        }
+        String url = SCHEMA + masterEntry.getIp() + ":" + masterEntry.getWebPort()
+            + "/" + TUBE_REQUEST_PATH + "?" + convertReqToQueryStr(req);
+        return requestMaster(url);
+    }
+
 
     public String getQueryUrl(Map<String, String> queryBody) throws Exception {
         int clusterId = Integer.parseInt(queryBody.get("clusterId"));

@@ -18,17 +18,18 @@
 package org.apache.tubemq.manager.controller.group;
 
 
-import static org.apache.tubemq.manager.controller.node.NodeController.ADD;
-import static org.apache.tubemq.manager.controller.node.NodeController.CLONE;
-import static org.apache.tubemq.manager.service.TubeMQHttpConst.SCHEMA;
-import static org.apache.tubemq.manager.utils.MasterUtils.TUBE_REQUEST_PATH;
+
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.ADD;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.CLONE;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.DELETE;
 import static org.apache.tubemq.manager.utils.MasterUtils.queryMaster;
-import static org.apache.tubemq.manager.utils.MasterUtils.requestMaster;
 
 import com.google.gson.Gson;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tubemq.manager.controller.TubeMQResult;
+import org.apache.tubemq.manager.controller.group.request.AddBlackGroupReq;
+import org.apache.tubemq.manager.controller.group.request.DeleteBlackGroupReq;
 import org.apache.tubemq.manager.controller.group.request.DeleteOffsetReq;
 import org.apache.tubemq.manager.controller.node.request.CloneOffsetReq;
 import org.apache.tubemq.manager.controller.topic.request.BatchAddGroupAuthReq;
@@ -53,8 +54,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class GroupController {
 
-    public static final String DELETE = "delete";
-
     public Gson gson = new Gson();
 
     @Autowired
@@ -64,7 +63,7 @@ public class GroupController {
     private TopicService topicService;
 
 
-    @PostMapping("/")
+    @PostMapping("")
     public @ResponseBody TubeMQResult groupMethodProxy(
         @RequestParam String method, @RequestBody String req) throws Exception {
         switch (method) {
@@ -92,7 +91,7 @@ public class GroupController {
 
 
     @PostMapping("/offset")
-    public @ResponseBody TubeMQResult offsetMethodProxy(
+    public @ResponseBody TubeMQResult offsetProxy(
         @RequestParam String method, @RequestBody String req) {
         switch (method) {
             case CLONE:
@@ -102,35 +101,23 @@ public class GroupController {
             default:
                 return TubeMQResult.getErrorResult("no such method");
         }
-
     }
 
-    /**
-     * add group to black list for certain topic
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @PostMapping("/blackGroup/add")
-    public @ResponseBody
-    TubeMQResult addBlackGroup(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return requestMaster(url);
+
+
+    @PostMapping("/blackGroup")
+    public @ResponseBody TubeMQResult BlackGroupProxy(
+        @RequestParam String method, @RequestBody String req) {
+        switch (method) {
+            case ADD:
+                return masterUtils.redirectToMasterWithBaseReq(gson.fromJson(req, AddBlackGroupReq.class));
+            case DELETE:
+                return masterUtils.redirectToMasterWithBaseReq(gson.fromJson(req, DeleteBlackGroupReq.class));
+            default:
+                return TubeMQResult.getErrorResult("no such method");
+        }
     }
 
-    /**
-     * delete group to black list for certain topic
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/blackGroup/delete")
-    public @ResponseBody TubeMQResult deleteBlackGroup(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return requestMaster(url);
-    }
 
     /**
      * query the black list for certain topic
@@ -138,7 +125,7 @@ public class GroupController {
      * @return
      * @throws Exception
      */
-    @GetMapping("/blackGroup/query")
+    @GetMapping("/blackGroup")
     public @ResponseBody String queryBlackGroup(
         @RequestParam Map<String, String> req) throws Exception {
         String url = masterUtils.getQueryUrl(req);

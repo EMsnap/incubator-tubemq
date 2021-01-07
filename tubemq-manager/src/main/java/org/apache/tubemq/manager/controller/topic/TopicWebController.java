@@ -18,39 +18,31 @@
 
 package org.apache.tubemq.manager.controller.topic;
 
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.ADD;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.AUTH_CONTROL;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.CLONE;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.DELETE;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.MODIFY;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.REMOVE;
 import static org.apache.tubemq.manager.utils.MasterUtils.queryMaster;
 import static org.apache.tubemq.manager.utils.MasterUtils.requestMaster;
 
-import static org.apache.tubemq.manager.controller.node.NodeController.ADD;
-import static org.apache.tubemq.manager.controller.node.NodeController.CLONE;
-import static org.apache.tubemq.manager.controller.node.NodeController.ADD;
-import static org.apache.tubemq.manager.controller.node.NodeController.CLONE;
-import static org.apache.tubemq.manager.service.TubeMQHttpConst.SCHEMA;
-import static org.apache.tubemq.manager.utils.MasterUtils.TUBE_REQUEST_PATH;
-import static org.apache.tubemq.manager.utils.MasterUtils.queryMaster;
-import static org.apache.tubemq.manager.utils.MasterUtils.requestMaster;
 
 import com.google.gson.Gson;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tubemq.manager.controller.TubeMQResult;
-import org.apache.tubemq.manager.controller.node.request.AddBrokersReq;
 import org.apache.tubemq.manager.controller.node.request.BatchAddTopicReq;
-import org.apache.tubemq.manager.controller.node.request.CloneBrokersReq;
-import org.apache.tubemq.manager.controller.node.request.CloneOffsetReq;
 import org.apache.tubemq.manager.controller.node.request.CloneTopicReq;
-import org.apache.tubemq.manager.controller.topic.request.BatchAddGroupAuthReq;
-import org.apache.tubemq.manager.controller.topic.request.DeleteGroupReq;
+import org.apache.tubemq.manager.controller.topic.request.DeleteTopicReq;
+import org.apache.tubemq.manager.controller.topic.request.ModifyTopicReq;
 import org.apache.tubemq.manager.controller.topic.request.RebalanceGroupReq;
+import org.apache.tubemq.manager.controller.topic.request.SetAuthControlReq;
 import org.apache.tubemq.manager.entry.NodeEntry;
 import org.apache.tubemq.manager.repository.NodeRepository;
-import org.apache.tubemq.manager.repository.TopicRepository;
 import org.apache.tubemq.manager.service.NodeService;
-import org.apache.tubemq.manager.service.TopicBackendWorker;
 import org.apache.tubemq.manager.utils.MasterUtils;
 import org.apache.tubemq.manager.service.TopicService;
-import org.apache.tubemq.manager.utils.ConvertUtils;
-import org.apache.tubemq.manager.utils.MasterUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,6 +56,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "/v1/topic")
 @Slf4j
 public class TopicWebController {
+
 
     @Autowired
     private NodeService nodeService;
@@ -83,7 +76,7 @@ public class TopicWebController {
      * broker method proxy
      * divides the operation on broker to different method
      */
-    @RequestMapping(value = "/")
+    @RequestMapping(value = "")
     public @ResponseBody TubeMQResult topicMethodProxy(
         @RequestParam String method, @RequestBody String req) throws Exception {
         switch (method) {
@@ -91,9 +84,69 @@ public class TopicWebController {
                 return addTopic(gson.fromJson(req, BatchAddTopicReq.class));
             case CLONE:
                 return cloneTopic(gson.fromJson(req, CloneTopicReq.class));
+            case AUTH_CONTROL:
+                return masterUtils.redirectToMasterWithBaseReq(gson.fromJson(req, SetAuthControlReq.class));
+            case MODIFY:
+                return masterUtils.redirectToMasterWithBaseReq(gson.fromJson(req, ModifyTopicReq.class));
+            case DELETE:
+            case REMOVE:
+                return masterUtils.redirectToMasterWithBaseReq(gson.fromJson(req, DeleteTopicReq.class));
             default:
                 return TubeMQResult.getErrorResult("no such method");
         }
+    }
+
+    /**
+     * query consumer auth control, shows all consumer groups
+     * @param req
+     * @return
+     * @throws Exception
+     */
+    @GetMapping("/consumer-auth")
+    public @ResponseBody String queryConsumerAuth(
+        @RequestParam Map<String, String> req) throws Exception {
+        String url = masterUtils.getQueryUrl(req);
+        return queryMaster(url);
+    }
+
+    /**
+     * query topic config info
+     * @param req
+     * @return
+     * @throws Exception
+     */
+    @GetMapping("/topic-config")
+    public @ResponseBody String queryTopicConfig(
+        @RequestParam Map<String, String> req) throws Exception {
+        String url = masterUtils.getQueryUrl(req);
+        return queryMaster(url);
+    }
+
+
+    /**
+     * rebalance consumer given consumer id
+     * @param req
+     * @return
+     * @throws Exception
+     */
+    @GetMapping("/consumer/rebalance")
+    public @ResponseBody TubeMQResult rebalanceConsumer(
+        @RequestParam Map<String, String> req) throws Exception {
+        String url = masterUtils.getQueryUrl(req);
+        return requestMaster(url);
+    }
+
+
+    /**
+     * rebalance all consumers in group
+     * @param req
+     * @return
+     * @throws Exception
+     */
+    @PostMapping("/group/rebalance")
+    public @ResponseBody TubeMQResult rebalanceGroup(
+        @RequestBody RebalanceGroupReq req) throws Exception {
+        return topicService.rebalanceGroup(req);
     }
 
     /**
@@ -120,7 +173,6 @@ public class TopicWebController {
      * @return
      * @throws Exception
      */
-    @PostMapping("/clone")
     public TubeMQResult cloneTopic(@RequestBody CloneTopicReq req) throws Exception {
         if (req.getClusterId() == null) {
             return TubeMQResult.getErrorResult("please input clusterId");
@@ -131,125 +183,6 @@ public class TopicWebController {
             return TubeMQResult.getErrorResult("no such cluster");
         }
         return nodeService.cloneTopicToBrokers(req, masterEntry);
-    }
-
-    /**
-     * batch modify topic config
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @PostMapping("/modify")
-    public @ResponseBody String modifyTopics(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return queryMaster(url);
-    }
-
-    /**
-     * batch delete topic info
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @PostMapping("/delete")
-    public @ResponseBody String deleteTopics(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return queryMaster(url);
-    }
-
-
-    /**
-     * batch remove topics
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @PostMapping("/remove")
-    public @ResponseBody String removeTopics(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return queryMaster(url);
-    }
-
-    /**
-     * query consumer auth control, shows all consumer groups
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @PostMapping("/query/consumer-auth")
-    public @ResponseBody String queryConsumerAuth(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return queryMaster(url);
-    }
-
-    /**
-     * query topic config info
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @PostMapping("/query/topic-config")
-    public @ResponseBody String queryTopicConfig(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return queryMaster(url);
-    }
-
-
-    /**
-     * enable auth control for topics
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/enable/auth-control")
-    public @ResponseBody TubeMQResult enableAuthControl(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return requestMaster(url);
-    }
-
-    /**
-     * disable auth control for topics
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/disable/auth-control")
-    public @ResponseBody TubeMQResult disableAuthControl(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return requestMaster(url);
-    }
-
-    /**
-     * rebalance consumer given consumer id
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @GetMapping("/rebalance/consumer")
-    public @ResponseBody TubeMQResult rebalanceConsumer(
-        @RequestParam Map<String, String> req) throws Exception {
-        String url = masterUtils.getQueryUrl(req);
-        return requestMaster(url);
-    }
-
-
-    /**
-     * rebalance all consumers in group
-     * @param req
-     * @return
-     * @throws Exception
-     */
-    @PostMapping("/rebalance/group")
-    public @ResponseBody TubeMQResult rebalanceGroup(
-        @RequestBody RebalanceGroupReq req) throws Exception {
-        return topicService.rebalanceGroup(req);
     }
 
 
