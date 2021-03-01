@@ -33,7 +33,6 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -157,7 +156,7 @@ public class NodeServiceImpl implements NodeService {
     public TubeMQResult addTopicsToBrokers(NodeEntry masterEntry, List<Integer> brokerIds,
         List<AddTopicReq> addTopicReqs) {
         TubeMQResult tubeResult = new TubeMQResult();
-        AddTopicsResult addTopicsResult = new AddTopicsResult();
+        CommonResult commonResult = new CommonResult();
 
         if (CollectionUtils.isEmpty(addTopicReqs)) {
             return tubeResult;
@@ -168,17 +167,17 @@ public class NodeServiceImpl implements NodeService {
                 addTopicReq.setBrokerId(brokerStr);
                 TubeMQResult result = addTopicToBrokers(addTopicReq, masterEntry);
                 if (result.getErrCode() == SUCCESS_CODE) {
-                    addTopicsResult.getSuccessTopics().add(addTopicReq.getTopicName());
+                    commonResult.getSuccess().add(addTopicReq.getTopicName());
                 } else {
-                    addTopicsResult.getFailTopics().add(addTopicReq.getTopicName());
+                    commonResult.getFail().add(addTopicReq.getTopicName());
                 }
             } catch (Exception e) {
                 log.error("add topic to brokers fail with exception", e);
-                addTopicsResult.getFailTopics().add(addTopicReq.getTopicName());
+                commonResult.getFail().add(addTopicReq.getTopicName());
             }
         });
 
-        tubeResult.setData(gson.toJson(addTopicsResult));
+        tubeResult.setData(gson.toJson(commonResult));
         return tubeResult;
     }
 
@@ -209,7 +208,7 @@ public class NodeServiceImpl implements NodeService {
     private BrokerStatusInfo getBrokerStatusInfo(QueryBrokerCfgReq queryReq, NodeEntry masterEntry) throws Exception {
         String url = SCHEMA + masterEntry.getIp() + ":" + masterEntry.getWebPort()
                 + "/" + TUBE_REQUEST_PATH + "?" + convertReqToQueryStr(queryReq);
-        BrokerStatusInfo brokerStatusInfo = gson.fromJson(masterService.queryMaster(url),
+        BrokerStatusInfo brokerStatusInfo = gson.fromJson(masterService.queryTube(url),
                 BrokerStatusInfo.class);
         return brokerStatusInfo;
     }
@@ -218,7 +217,7 @@ public class NodeServiceImpl implements NodeService {
     public TubeMQResult addTopicToBrokers(AddTopicReq req, NodeEntry masterEntry) throws Exception {
         String url = SCHEMA + masterEntry.getIp() + ":" + masterEntry.getWebPort()
                 + "/" + TUBE_REQUEST_PATH + "?" + convertReqToQueryStr(req);
-        return masterService.requestMaster(url);
+        return masterService.requestTube(url);
     }
 
 

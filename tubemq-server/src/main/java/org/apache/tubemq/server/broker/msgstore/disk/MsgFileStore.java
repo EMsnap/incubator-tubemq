@@ -262,7 +262,7 @@ public class MsgFileStore implements Closeable {
         List<ClientBroker.TransferedMessage> transferedMessageList =
                 new ArrayList<>();
         // read data file by index.
-        for (curIndexOffset = 0; curIndexOffset < indexBuffer.remaining();
+        for (curIndexOffset = 0; indexBuffer.remaining() >= DataStoreUtils.STORE_INDEX_HEAD_LEN;
              curIndexOffset += DataStoreUtils.STORE_INDEX_HEAD_LEN) {
             curIndexPartitionId = indexBuffer.getInt();
             curIndexDataOffset = indexBuffer.getLong();

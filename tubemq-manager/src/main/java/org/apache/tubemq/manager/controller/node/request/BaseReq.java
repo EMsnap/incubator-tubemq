@@ -17,6 +17,7 @@
 
 package org.apache.tubemq.manager.controller.node.request;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data

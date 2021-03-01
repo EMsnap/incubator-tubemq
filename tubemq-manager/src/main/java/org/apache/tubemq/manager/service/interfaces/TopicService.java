@@ -17,9 +17,14 @@
 
 package org.apache.tubemq.manager.service.interfaces;
 
+import java.util.List;
 import org.apache.tubemq.manager.controller.TubeMQResult;
 import org.apache.tubemq.manager.controller.group.request.DeleteOffsetReq;
+import org.apache.tubemq.manager.controller.group.request.QueryOffsetAtTimestampReq;
 import org.apache.tubemq.manager.controller.group.request.QueryOffsetReq;
+import org.apache.tubemq.manager.controller.group.request.ResetTimeOffsetReq;
+import org.apache.tubemq.manager.controller.group.request.SetOffsetReq;
+import org.apache.tubemq.manager.controller.group.result.OffsetTimeQueryRes.GroupOffsetItem;
 import org.apache.tubemq.manager.controller.node.request.CloneOffsetReq;
 import org.apache.tubemq.manager.controller.topic.request.RebalanceGroupReq;
 import org.apache.tubemq.manager.entry.NodeEntry;
@@ -72,4 +77,22 @@ public interface TopicService {
      * @return
      */
     TubeMQResult queryOffset(QueryOffsetReq req);
+
+    /**
+     * reset offset to certain time
+     * @param req
+     * @return
+     */
+    TubeMQResult resetOffsetToTime(ResetTimeOffsetReq req);
+
+    /**
+     * query offset at certain time
+     * @param req
+     * @return
+     */
+    List<GroupOffsetItem> queryOffsetAtTimeStamp(QueryOffsetAtTimestampReq req);
+
+
+
+    TubeMQResult setGroupOffset(SetOffsetReq req);
 }

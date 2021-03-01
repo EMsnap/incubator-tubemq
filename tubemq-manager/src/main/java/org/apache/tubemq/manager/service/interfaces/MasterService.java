@@ -28,18 +28,18 @@ import org.springframework.stereotype.Component;
 public interface MasterService {
 
     /**
-     * request master with request url, return action result (success or fail)
+     * request master or broker with request url, return action result (success or fail)
      * @param url
      * @return
      */
-    TubeMQResult requestMaster(String url);
+    TubeMQResult requestTube(String url);
 
     /**
      * query master with query url, return the information returned by master
      * @param url
      * @return
      */
-    String queryMaster(String url);
+    String queryTube(String url);
 
     /**
      * request master with baseReq, return action result (success or fail)

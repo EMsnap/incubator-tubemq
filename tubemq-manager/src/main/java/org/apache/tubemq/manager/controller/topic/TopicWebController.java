@@ -92,7 +92,7 @@ public class TopicWebController {
     public @ResponseBody String queryConsumerAuth(
         @RequestParam Map<String, String> req) throws Exception {
         String url = masterService.getQueryUrl(req);
-        return masterService.queryMaster(url);
+        return masterService.queryTube(url);
     }
 
     /**
@@ -105,7 +105,7 @@ public class TopicWebController {
     public @ResponseBody String queryTopicConfig(
         @RequestParam Map<String, String> req) throws Exception {
         String url = masterService.getQueryUrl(req);
-        return masterService.queryMaster(url);
+        return masterService.queryTube(url);
     }
 
 }

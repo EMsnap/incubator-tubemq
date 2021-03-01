@@ -23,17 +23,25 @@ import static org.apache.tubemq.manager.service.TubeMQHttpConst.ADD;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.CLONE;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.DELETE;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.QUERY;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.QUERY_OFFSET_AT_TIMESTAMP;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.REBALANCE_CONSUMER_GROUP;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.REBALANCE_CONSUMER;
+import static org.apache.tubemq.manager.service.TubeMQHttpConst.RESET_OFFSET_TO_TIME;
 
 import com.google.gson.Gson;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.tubemq.manager.controller.TubeMQResult;
 import org.apache.tubemq.manager.controller.group.request.AddBlackGroupReq;
 import org.apache.tubemq.manager.controller.group.request.DeleteBlackGroupReq;
 import org.apache.tubemq.manager.controller.group.request.DeleteOffsetReq;
+import org.apache.tubemq.manager.controller.group.request.QueryOffsetAtTimestampReq;
 import org.apache.tubemq.manager.controller.group.request.QueryOffsetReq;
+import org.apache.tubemq.manager.controller.group.request.ResetTimeOffsetReq;
+import org.apache.tubemq.manager.controller.group.result.OffsetTimeQueryRes.GroupOffsetItem;
 import org.apache.tubemq.manager.controller.node.request.CloneOffsetReq;
 import org.apache.tubemq.manager.controller.topic.request.BatchAddGroupAuthReq;
 import org.apache.tubemq.manager.controller.topic.request.DeleteGroupReq;
@@ -67,7 +75,7 @@ public class GroupController {
 
     @PostMapping("")
     public @ResponseBody TubeMQResult groupMethodProxy(
-        @RequestParam String method, @RequestBody String req) throws Exception {
+        @RequestParam String method, @RequestBody String req)  {
         switch (method) {
             case ADD:
                 return masterService.baseRequestMaster(gson.fromJson(req, BatchAddGroupAuthReq.class));
@@ -77,9 +85,26 @@ public class GroupController {
                 return topicService.rebalanceGroup(gson.fromJson(req, RebalanceGroupReq.class));
             case REBALANCE_CONSUMER:
                 return masterService.baseRequestMaster(gson.fromJson(req, RebalanceConsumerReq.class));
+            case RESET_OFFSET_TO_TIME:
+                return topicService.resetOffsetToTime(gson.fromJson(req, ResetTimeOffsetReq.class));
+            case QUERY_OFFSET_AT_TIMESTAMP:
+                return queryOffsetAtTimeStamp(gson.fromJson(req, QueryOffsetAtTimestampReq.class));
             default:
                 return TubeMQResult.getErrorResult("no such method");
         }
+    }
+
+    private TubeMQResult queryOffsetAtTimeStamp(QueryOffsetAtTimestampReq req) {
+        if (ObjectUtils.isEmpty(req.getBrokerIp()) || ObjectUtils.isEmpty(req.getBrokerWebPort())) {
+            return TubeMQResult.getErrorResult("please input broker ip and web port");
+        }
+        TubeMQResult res = new TubeMQResult();
+        List<GroupOffsetItem> groupOffsetItems = topicService.queryOffsetAtTimeStamp(req);
+        if (CollectionUtils.isEmpty(groupOffsetItems)) {
+            return TubeMQResult.getErrorResult("no offsets at given timestamp");
+        }
+        res.setData(gson.toJson(groupOffsetItems));
+        return res;
     }
 
     /**
@@ -92,7 +117,7 @@ public class GroupController {
     public @ResponseBody String queryConsumer(
         @RequestParam Map<String, String> req) throws Exception {
         String url = masterService.getQueryUrl(req);
-        return masterService.queryMaster(url);
+        return masterService.queryTube(url);
     }
 
 
@@ -136,7 +161,7 @@ public class GroupController {
     public @ResponseBody String queryBlackGroup(
         @RequestParam Map<String, String> req) throws Exception {
         String url = masterService.getQueryUrl(req);
-        return masterService.queryMaster(url);
+        return masterService.queryTube(url);
     }
 
 

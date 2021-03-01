@@ -57,7 +57,7 @@ public class MasterServiceImpl implements MasterService {
     NodeRepository nodeRepository;
 
     @Override
-    public TubeMQResult requestMaster(String url) {
+    public TubeMQResult requestTube(String url) {
 
         log.info("start to request {}", url);
         HttpGet httpGet = new HttpGet(url);
@@ -80,12 +80,12 @@ public class MasterServiceImpl implements MasterService {
     }
 
     /**
-     * query master to get node info
+     * query tube broker or master using url
      * @param url
      * @return query info
      */
     @Override
-    public String queryMaster(String url) {
+    public String queryTube(String url) {
         log.info("start to request {}", url);
         HttpGet httpGet = new HttpGet(url);
         TubeMQResult defaultResult = new TubeMQResult();
@@ -114,7 +114,7 @@ public class MasterServiceImpl implements MasterService {
         }
         String url = SCHEMA + masterEntry.getIp() + ":" + masterEntry.getWebPort()
             + "/" + TUBE_REQUEST_PATH + "?" + convertReqToQueryStr(req);
-        return requestMaster(url);
+        return requestTube(url);
     }
 
 
@@ -141,6 +141,6 @@ public class MasterServiceImpl implements MasterService {
     @Override
     public TubeMQResult checkMasterNodeStatus(String masterIp, Integer masterWebPort) {
         String url = SCHEMA + masterIp + ":" + masterWebPort + BROKER_RUN_STATUS;
-        return requestMaster(url);
+        return requestTube(url);
     }
 }

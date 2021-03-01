@@ -90,7 +90,7 @@ public class MessageStore implements Closeable {
     private AtomicLong maxFileValidDurMs = new AtomicLong(0);
     private int maxAllowRdSize = 262144;
     private AtomicInteger memMaxIndexReadCnt = new AtomicInteger(6000);
-    private AtomicInteger fileMaxIndexReadCnt = new AtomicInteger(8000);
+    private AtomicInteger fileMaxIndexReadCnt = new AtomicInteger(1000000);
     private AtomicInteger memMaxFilterIndexReadCnt
             = new AtomicInteger(memMaxIndexReadCnt.get() * 2);
     private AtomicInteger fileMaxFilterIndexReadCnt

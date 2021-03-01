@@ -145,7 +145,7 @@ public class ClusterController {
     public @ResponseBody String queryInfo(
             @RequestParam Map<String, String> queryBody) throws Exception {
         String url = masterService.getQueryUrl(queryBody);
-        return masterService.queryMaster(url);
+        return masterService.queryTube(url);
     }
 
     /**
@@ -165,7 +165,7 @@ public class ClusterController {
                     clusterId);
             String url = SCHEMA + nodeEntry.getIp() + ":" + nodeEntry.getWebPort()
                     + "/" + TUBE_REQUEST_PATH + "?" + covertMapToQueryString(requestBody);
-            return gson.toJson(masterService.requestMaster(url));
+            return gson.toJson(masterService.requestTube(url));
         } else {
             TubeMQResult result = new TubeMQResult();
             result.setErrCode(-1);

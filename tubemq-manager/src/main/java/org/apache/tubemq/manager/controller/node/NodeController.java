@@ -35,15 +35,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-import static org.apache.tubemq.manager.controller.TubeMQResult.getErrorResult;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.ADD;
-import static org.apache.tubemq.manager.service.TubeMQHttpConst.ADMIN_QUERY_CLUSTER_INFO;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.CLONE;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.DELETE;
-import static org.apache.tubemq.manager.service.TubeMQHttpConst.NO_SUCH_METHOD;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.OFFLINE;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.ONLINE;
-import static org.apache.tubemq.manager.service.TubeMQHttpConst.OP_QUERY;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.RELOAD;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.SET_READ_OR_WRITE;
 
@@ -73,7 +69,7 @@ public class NodeController {
     public @ResponseBody String queryBrokerDetail(
             @RequestParam Map<String, String> queryBody) throws Exception {
         String url = masterService.getQueryUrl(queryBody);
-        return masterService.queryMaster(url);
+        return masterService.queryTube(url);
     }
 
 
@@ -86,7 +82,7 @@ public class NodeController {
     public @ResponseBody String queryBrokerConfig(
             @RequestParam Map<String, String> queryBody) throws Exception {
         String url = masterService.getQueryUrl(queryBody);
-        return masterService.queryMaster(url);
+        return masterService.queryTube(url);
     }
 
 

@@ -30,8 +30,11 @@ public class TubeMQHttpConst {
     public static final String RELOAD_BROKER =
             "/webapi.htm?type=op_modify&method=admin_reload_broker_configure";
     public static final String QUERY_BROKER_CONFIG = "admin_query_broker_configure";
+    public static final String ADMIN_OFFSET_AT_TIMESTAMP = "admin_offset_at_timestamp";
     public static final String OP_QUERY = "op_query";
     public static final String OP_MODIFY = "op_modify";
+    public static final String ADMIN_SET_OFFSET = "admin_set_offset";
+    public static final String BLANK = " ";
     public static final String BATCH_ADD_BROKER = "admin_bath_add_broker_configure";
     public static final String WEB_API = "webapi";
     public static final String BATCH_ADD_TOPIC = "admin_add_new_topic_record";
@@ -50,8 +53,11 @@ public class TubeMQHttpConst {
     public static final String OFFLINE = "offline";
     public static final String REBALANCE_CONSUMER_GROUP = "rebalanceGroup";
     public static final String REBALANCE_CONSUMER = "rebalanceConsumer";
+    public static final String RESET_OFFSET_TO_TIME = "resetOffsetToTime";
+    public static final String QUERY_OFFSET_AT_TIMESTAMP = "queryOffsetAtTimestamp";
     public static final String NO_SUCH_CLUSTER = "no such cluster";
     public static final Integer SUCCESS_CODE = 0;
     public static final Integer DELETE_FAIL = 0;
     public static final String QUERY = "query";
+    public static final String OFFSET_TIME_TOPIC = "offsetTopic";
 }
