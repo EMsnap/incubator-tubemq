@@ -17,20 +17,26 @@
 
 package org.apache.tubemq.manager.controller.node.request;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import org.apache.tubemq.manager.service.tube.BrokerConf;
 
 import java.util.List;
+import org.springframework.validation.annotation.Validated;
 
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.*;
 
 @Data
+@Validated
 public class AddBrokersReq extends BaseReq{
 
     private String confModAuthToken;
 
     private String createUser;
 
+    @NotNull(message = "brokerJsonSet can't be null")
+    @Valid
     private List<BrokerConf> brokerJsonSet;
 
     public static AddBrokersReq getAddBrokerReq(String token, int clusterId) {

@@ -18,7 +18,7 @@
 package org.apache.tubemq.manager.service.interfaces;
 
 import java.util.List;
-import org.springframework.stereotype.Service;
+import org.apache.tubemq.manager.controller.TubeMQResult;
 
 public interface BrokerService {
 
@@ -52,4 +52,12 @@ public interface BrokerService {
      * @return
      */
     List<Long> getBrokerIdListInRegion(long regionId, long cluster);
+
+    /**
+     *
+     * @param regionId
+     * @param clusterId
+     * @return
+     */
+    TubeMQResult createBroker(long regionId, long clusterId);
 }

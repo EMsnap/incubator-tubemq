@@ -22,6 +22,7 @@ import static org.apache.tubemq.manager.service.TubeMQHttpConst.DEFAULT_REGION;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.tubemq.manager.controller.TubeMQResult;
 import org.apache.tubemq.manager.entry.BrokerEntry;
 import org.apache.tubemq.manager.repository.BrokerRepository;
 import org.apache.tubemq.manager.service.interfaces.BrokerService;
@@ -33,6 +34,13 @@ public class BrokerServiceImpl implements BrokerService {
 
     @Autowired
     BrokerRepository brokerRepository;
+
+
+    @Override
+    public TubeMQResult createBroker(long regionId, long clusterId) {
+
+        return null;
+    }
 
     @Override
     public void resetBrokerRegions(long regionId, long clusterId) {
@@ -71,4 +79,6 @@ public class BrokerServiceImpl implements BrokerService {
             Collectors.toList());
         return regionBrokerIdList;
     }
+
+
 }

@@ -16,12 +16,18 @@
  */
 
 package org.apache.tubemq.manager.service.tube;
+import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class BrokerConf {
 
+    @NotNull
     private String brokerIp;
     private Integer brokerPort;
     private Integer brokerId;
