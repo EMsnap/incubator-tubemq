@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.tubemq.manager.controller.TubeMQResult;
 import org.apache.tubemq.manager.entry.RegionEntry;
 import org.apache.tubemq.manager.repository.BrokerRepository;
-import org.apache.tubemq.manager.repository.NodeRepository;
+import org.apache.tubemq.manager.repository.MasterRepository;
 import org.apache.tubemq.manager.repository.RegionRepository;
 import org.apache.tubemq.manager.service.interfaces.BrokerService;
 import org.apache.tubemq.manager.service.interfaces.RegionService;
@@ -51,7 +51,7 @@ public class RegionServiceImpl implements RegionService {
     BrokerRepository brokerRepository;
 
     @Autowired
-    NodeRepository nodeRepository;
+    MasterRepository masterRepository;
 
     @Autowired
     BrokerService brokerService;

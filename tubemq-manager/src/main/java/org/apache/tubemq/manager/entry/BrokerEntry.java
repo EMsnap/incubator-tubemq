@@ -27,6 +27,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
+import javax.validation.constraints.Size;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -34,27 +39,47 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Table(name = "broker", uniqueConstraints=
-@UniqueConstraint(columnNames={"brokerId"}))
+@UniqueConstraint(columnNames={"brokerIp", "clusterId"}))
 @Data
 @EntityListeners(AuditingEntityListener.class)
 public class BrokerEntry {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @Null
     private Long id;
-
+    @Min(0)
     private Long brokerId;
-
-    private long brokerIp;
-
+    @NotEmpty
+    private String brokerIp;
+    @Null
+    private Long version;
     @CreatedDate
-    private Date createTime;
-
+    private Date createDate;
     @LastModifiedDate
     private Date modifyTime;
-
+    @Size(max = 64)
     private String createUser;
-
     private Long regionId;
-
+    @NotNull
     private Long clusterId;
+    @NotNull
+    @Min(0)
+    private Integer brokerPort;
+    private String deleteWhen;
+    @Min(1)
+    private Integer numPartitions;
+    @Min(0)
+    private Integer unflushThreshold;
+    @Min(1)
+    private Integer unflushInterval;
+    @Min(0)
+    private Integer unflushDataHold;
+    private boolean acceptPublish;
+    private boolean acceptSubscribe;
+    private Integer brokerTLSPort;
+    private Integer numTopicStores;
+    private Integer memCacheMsgCntInK;
+    private Integer memCacheMsgSizeInMB;
+    private Integer memCacheFlushIntegervl;
+    private String deletePolicy;
 }

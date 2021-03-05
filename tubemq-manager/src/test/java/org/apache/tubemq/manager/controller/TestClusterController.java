@@ -28,9 +28,9 @@ import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tubemq.manager.controller.cluster.request.AddClusterReq;
 import org.apache.tubemq.manager.entry.ClusterEntry;
-import org.apache.tubemq.manager.entry.NodeEntry;
+import org.apache.tubemq.manager.entry.MasterEntry;
 import org.apache.tubemq.manager.repository.ClusterRepository;
-import org.apache.tubemq.manager.repository.NodeRepository;
+import org.apache.tubemq.manager.repository.MasterRepository;
 import org.apache.tubemq.manager.service.interfaces.MasterService;
 import org.apache.tubemq.manager.service.interfaces.NodeService;
 import org.junit.Assert;
@@ -55,7 +55,7 @@ public class TestClusterController {
     private final Gson gson = new Gson();
 
     @MockBean
-    private NodeRepository nodeRepository;
+    private MasterRepository masterRepository;
 
     @MockBean
     private ClusterRepository clusterRepository;
@@ -69,19 +69,18 @@ public class TestClusterController {
     @Autowired
     private MockMvc mockMvc;
 
-    private NodeEntry getNodeEntry() {
-        NodeEntry nodeEntry = new NodeEntry();
-        nodeEntry.setMaster(true);
-        nodeEntry.setIp("127.0.0.1");
-        nodeEntry.setWebPort(8014);
-        return nodeEntry;
+    private MasterEntry getNodeEntry() {
+        MasterEntry masterEntry = new MasterEntry();
+        masterEntry.setIp("127.0.0.1");
+        masterEntry.setWebPort(8014);
+        return masterEntry;
     }
 
     @Test
     public void testExceptionQuery() throws Exception {
-        NodeEntry nodeEntry = getNodeEntry();
-        when(nodeRepository.findNodeEntryByClusterIdIsAndMasterIsTrue(any(Integer.class)))
-                .thenReturn(nodeEntry);
+        MasterEntry masterEntry = getNodeEntry();
+        when(masterRepository.getMasterEntryByClusterIdEquals(any(Integer.class)))
+                .thenReturn(masterEntry);
         RequestBuilder request = get(
                 "/v1/cluster/query?method=admin_query_topic_info&type=op_query");
         MvcResult result = mockMvc.perform(request).andReturn();
@@ -93,9 +92,9 @@ public class TestClusterController {
 
     @Test
     public void testTopicQuery() throws Exception {
-        NodeEntry nodeEntry = getNodeEntry();
-        when(nodeRepository.findNodeEntryByClusterIdIsAndMasterIsTrue(any(Integer.class)))
-                .thenReturn(nodeEntry);
+        MasterEntry masterEntry = getNodeEntry();
+        when(masterRepository.getMasterEntryByClusterIdEquals(any(Integer.class)))
+                .thenReturn(masterEntry);
         RequestBuilder request = get(
                 "/v1/cluster/query?method=admin_query_topic_info&type=op_query&clusterId=1");
         MvcResult result = mockMvc.perform(request).andReturn();
@@ -106,9 +105,9 @@ public class TestClusterController {
 
     @Test
     public void testBrokerQuery() throws Exception {
-        NodeEntry nodeEntry = getNodeEntry();
-        when(nodeRepository.findNodeEntryByClusterIdIsAndMasterIsTrue(any(Integer.class)))
-                .thenReturn(nodeEntry);
+        MasterEntry masterEntry = getNodeEntry();
+        when(masterRepository.getMasterEntryByClusterIdEquals(any(Integer.class)))
+                .thenReturn(masterEntry);
         RequestBuilder request = get(
                 "/v1/cluster/query?method=admin_query_broker_run_status&type=op_query&clusterId=1&brokerIp=");
         MvcResult result = mockMvc.perform(request).andReturn();
@@ -119,9 +118,9 @@ public class TestClusterController {
 
     @Test
     public void testTopicAndGroupQuery() throws Exception {
-        NodeEntry nodeEntry = getNodeEntry();
-        when(nodeRepository.findNodeEntryByClusterIdIsAndMasterIsTrue(any(Integer.class)))
-                .thenReturn(nodeEntry);
+        MasterEntry masterEntry = getNodeEntry();
+        when(masterRepository.getMasterEntryByClusterIdEquals(any(Integer.class)))
+                .thenReturn(masterEntry);
         RequestBuilder request = get(
                 "/v1/cluster/query?method=admin_query_sub_info&type=op_query&clusterId=1&topicName=test&groupName=test");
         MvcResult result = mockMvc.perform(request).andReturn();
@@ -148,9 +147,9 @@ public class TestClusterController {
                 + "  \"acceptSubscribe\": true,\n"
                 + "  \"brokerId\": 12323\n"
                 + "}\n";
-        NodeEntry nodeEntry = getNodeEntry();
-        when(nodeRepository.findNodeEntryByClusterIdIsAndMasterIsTrue(any(Integer.class)))
-                .thenReturn(nodeEntry);
+        MasterEntry masterEntry = getNodeEntry();
+        when(masterRepository.getMasterEntryByClusterIdEquals(any(Integer.class)))
+                .thenReturn(masterEntry);
         RequestBuilder request = post("/v1/cluster/modify")
                 .contentType(MediaType.APPLICATION_JSON).content(jsonStr);
         MvcResult result = mockMvc.perform(request).andReturn();
@@ -180,7 +179,7 @@ public class TestClusterController {
         TubeMQResult successResult = new TubeMQResult();
 
         when(clusterRepository.saveAndFlush(any(ClusterEntry.class))).thenReturn(entry);
-        when(nodeService.addNode(any(NodeEntry.class))).thenReturn(Boolean.TRUE);
+        when(nodeService.addNode(any(MasterEntry.class))).thenReturn(Boolean.TRUE);
         when(masterService.checkMasterNodeStatus(anyString(), anyInt())).thenReturn(successResult);
 
         RequestBuilder request = post("/v1/cluster")

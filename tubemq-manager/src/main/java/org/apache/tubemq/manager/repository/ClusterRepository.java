@@ -17,9 +17,7 @@
 
 package org.apache.tubemq.manager.repository;
 
-import java.util.List;
 import org.apache.tubemq.manager.entry.ClusterEntry;
-import org.apache.tubemq.manager.entry.NodeEntry;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ClusterRepository extends JpaRepository<ClusterEntry, Long> {

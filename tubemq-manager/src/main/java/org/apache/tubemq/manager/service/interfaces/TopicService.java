@@ -17,12 +17,14 @@
 
 package org.apache.tubemq.manager.service.interfaces;
 
+import java.util.List;
 import org.apache.tubemq.manager.controller.TubeMQResult;
 import org.apache.tubemq.manager.controller.group.request.DeleteOffsetReq;
 import org.apache.tubemq.manager.controller.group.request.QueryOffsetReq;
+import org.apache.tubemq.manager.controller.node.request.AddTopicReq;
 import org.apache.tubemq.manager.controller.node.request.CloneOffsetReq;
 import org.apache.tubemq.manager.controller.topic.request.RebalanceGroupReq;
-import org.apache.tubemq.manager.entry.NodeEntry;
+import org.apache.tubemq.manager.entry.MasterEntry;
 import org.apache.tubemq.manager.service.tube.TubeHttpGroupDetailInfo;
 import org.apache.tubemq.manager.service.tube.TubeHttpTopicInfoList;
 
@@ -30,11 +32,11 @@ public interface TopicService {
 
     /**
      * get consumer group run info
-     * @param nodeEntry
+     * @param masterEntry
      * @param group
      * @return
      */
-    TubeHttpGroupDetailInfo requestGroupRunInfo(NodeEntry nodeEntry, String group);
+    TubeHttpGroupDetailInfo requestGroupRunInfo(MasterEntry masterEntry, String group);
 
     /**
      * clone offset to other groups
@@ -45,11 +47,11 @@ public interface TopicService {
 
     /**
      * get topic config info
-     * @param nodeEntry
+     * @param masterEntry
      * @param topic
      * @return
      */
-    TubeHttpTopicInfoList requestTopicConfigInfo(NodeEntry nodeEntry, String topic);
+    TubeHttpTopicInfoList requestTopicConfigInfo(MasterEntry masterEntry, String topic);
 
     /**
      * rebalance group
@@ -72,4 +74,11 @@ public interface TopicService {
      * @return
      */
     TubeMQResult queryOffset(QueryOffsetReq req);
+
+
+    TubeMQResult addTopicsToBrokers(MasterEntry masterEntry, List<Long> brokerIds,
+        List<AddTopicReq> addTopicReqs);
+
+    TubeMQResult addTopicToBrokers(AddTopicReq req, MasterEntry masterEntry)
+        throws Exception;
 }

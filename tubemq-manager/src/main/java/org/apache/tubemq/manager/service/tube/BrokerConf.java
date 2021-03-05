@@ -20,6 +20,7 @@ import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.tubemq.manager.entry.BrokerEntry;
 
 
 @Data
@@ -30,11 +31,11 @@ public class BrokerConf {
     @NotNull
     private String brokerIp;
     private Integer brokerPort;
-    private Integer brokerId;
+    private Long brokerId;
     private String deleteWhen;
     private Integer numPartitions;
     private Integer unflushThreshold;
-    private Integer unflushIntegererval;
+    private Integer unflushInterval;
     private Integer unflushDataHold;
     private boolean acceptPublish;
     private boolean acceptSubscribe;
@@ -53,7 +54,7 @@ public class BrokerConf {
         this.deleteWhen = other.deleteWhen;
         this.numPartitions = other.numPartitions;
         this.unflushThreshold = other.unflushThreshold;
-        this.unflushIntegererval = other.unflushIntegererval;
+        this.unflushInterval = other.unflushInterval;
         this.unflushDataHold = other.unflushDataHold;
         this.acceptPublish = other.acceptPublish;
         this.acceptSubscribe = other.acceptSubscribe;
@@ -64,6 +65,27 @@ public class BrokerConf {
         this.memCacheMsgSizeInMB = other.memCacheMsgSizeInMB;
         this.memCacheFlushIntegervl = other.memCacheFlushIntegervl;
         this.deletePolicy = other.deletePolicy;
+    }
+
+
+    public BrokerConf(BrokerEntry brokerEntry) {
+        this.brokerIp = brokerEntry.getBrokerIp();
+        this.brokerPort = brokerEntry.getBrokerPort();
+        this.brokerId = brokerEntry.getBrokerId();
+        this.deleteWhen = brokerEntry.getDeleteWhen();
+        this.numPartitions = brokerEntry.getNumPartitions();
+        this.unflushThreshold = brokerEntry.getUnflushThreshold();
+        this.unflushInterval = brokerEntry.getUnflushInterval();
+        this.unflushDataHold = brokerEntry.getUnflushDataHold();
+        this.acceptPublish = brokerEntry.isAcceptPublish();
+        this.acceptSubscribe = brokerEntry.isAcceptSubscribe();
+        this.createUser = brokerEntry.getCreateUser();
+        this.brokerTLSPort = brokerEntry.getBrokerTLSPort();
+        this.numTopicStores = brokerEntry.getNumTopicStores();
+        this.memCacheMsgCntInK = brokerEntry.getMemCacheMsgCntInK();
+        this.memCacheMsgSizeInMB = brokerEntry.getMemCacheMsgSizeInMB();
+        this.memCacheFlushIntegervl = brokerEntry.getMemCacheFlushIntegervl();
+        this.deletePolicy = brokerEntry.getDeletePolicy();
     }
 
 

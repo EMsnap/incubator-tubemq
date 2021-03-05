@@ -27,11 +27,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TubeMQResult {
+public class TubeMQResult<T> {
     private String errMsg = "";
     private int errCode = 0;
     private boolean result = true;
     private String data;
+    private T clazz;
 
     private static Gson json = new Gson();
 

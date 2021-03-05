@@ -17,9 +17,11 @@
 
 package org.apache.tubemq.manager.controller.node.request;
 
+import com.google.common.collect.Lists;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
+import org.apache.tubemq.manager.entry.BrokerEntry;
 import org.apache.tubemq.manager.service.tube.BrokerConf;
 
 import java.util.List;
@@ -31,6 +33,7 @@ import static org.apache.tubemq.manager.service.TubeMQHttpConst.*;
 @Validated
 public class AddBrokersReq extends BaseReq{
 
+
     private String confModAuthToken;
 
     private String createUser;
@@ -39,14 +42,45 @@ public class AddBrokersReq extends BaseReq{
     @Valid
     private List<BrokerConf> brokerJsonSet;
 
-    public static AddBrokersReq getAddBrokerReq(String token, int clusterId) {
+    public static AddBrokersReq getAddBrokerReq(Long clusterId) {
         AddBrokersReq req = new AddBrokersReq();
         req.setClusterId(clusterId);
+        req.setConfModAuthToken(DEFAULT_CONF_MOD_AUTH_TOKEN);
         req.setMethod(BATCH_ADD_BROKER);
         req.setType(OP_MODIFY);
         req.setCreateUser(WEB_API);
-        req.setConfModAuthToken(token);
         return req;
+    }
+
+
+    public static AddBrokersReq getBatchAddBrokerReq
+        (Long clusterId, List<BrokerEntry> brokerEntries) {
+        AddBrokersReq req = AddBrokersReq.getAddBrokerReq(clusterId);
+        // generate add brokers req using given target broker ips
+        List<BrokerConf> brokerConfs = Lists.newArrayList();
+        brokerEntries.forEach(
+            brokerEntry -> {
+                BrokerConf brokerConf = new BrokerConf(brokerEntry);
+                brokerConfs.add(brokerConf);
+            }
+        );
+        req.setBrokerJsonSet(brokerConfs);
+        return req;
+    }
+
+
+    public static AddBrokersReq getBatchAddBrokersReq(List<String> targetIps, Long clusterId, BrokerConf sourceBrokerConf) {
+        AddBrokersReq addBrokersReq = AddBrokersReq.getAddBrokerReq(clusterId);
+        // generate add brokers req using given target broker ips
+        List<BrokerConf> brokerConfs = Lists.newArrayList();
+        targetIps.forEach(ip -> {
+            BrokerConf brokerConf = new BrokerConf(sourceBrokerConf);
+            brokerConf.setBrokerIp(ip);
+            brokerConf.setBrokerId(0L);
+            brokerConfs.add(brokerConf);
+        });
+        addBrokersReq.setBrokerJsonSet(brokerConfs);
+        return addBrokersReq;
     }
 
 }

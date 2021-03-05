@@ -21,14 +21,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.apache.tubemq.manager.controller.TubeMQResult;
-import org.apache.tubemq.manager.controller.node.request.AddBrokersReq;
 import org.apache.tubemq.manager.controller.node.request.AddTopicReq;
 import org.apache.tubemq.manager.controller.node.request.BatchAddTopicReq;
 import org.apache.tubemq.manager.controller.node.request.CloneBrokersReq;
 import org.apache.tubemq.manager.controller.node.request.CloneTopicReq;
-import org.apache.tubemq.manager.entry.NodeEntry;
+import org.apache.tubemq.manager.entry.MasterEntry;
 import org.apache.tubemq.manager.service.TopicFuture;
-import org.apache.tubemq.manager.service.tube.AddBrokerResult;
 
 public interface NodeService {
 
@@ -47,7 +45,7 @@ public interface NodeService {
      * @param addTopicReqs
      * @return
      */
-    TubeMQResult addTopicsToBrokers(NodeEntry masterEntry, List<Integer> brokerIds,
+    TubeMQResult addTopicsToBrokers(MasterEntry masterEntry, List<Integer> brokerIds,
         List<AddTopicReq> addTopicReqs);
 
     /**
@@ -57,7 +55,7 @@ public interface NodeService {
      * @return
      * @throws Exception
      */
-    TubeMQResult addTopicToBrokers(AddTopicReq req, NodeEntry masterEntry) throws Exception;
+    TubeMQResult addTopicToBrokers(AddTopicReq req, MasterEntry masterEntry) throws Exception;
 
     /**
      * update broker status
@@ -85,8 +83,8 @@ public interface NodeService {
 
     /**
      * add one node to node repository
-     * @param nodeEntry
+     * @param masterEntry
      * @return
      */
-    boolean addNode(NodeEntry nodeEntry);
+    boolean addNode(MasterEntry masterEntry);
 }

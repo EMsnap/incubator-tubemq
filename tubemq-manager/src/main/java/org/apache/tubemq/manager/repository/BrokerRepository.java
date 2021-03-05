@@ -29,4 +29,5 @@ public interface BrokerRepository extends JpaRepository<BrokerEntry, Long> {
 
     List<BrokerEntry> findBrokerEntriesByRegionIdEqualsAndClusterIdEquals(Long regionId, long clusterId);
 
+    List<BrokerEntry> findBrokerEntriesByClusterIdEquals(Long brokerId);
 }

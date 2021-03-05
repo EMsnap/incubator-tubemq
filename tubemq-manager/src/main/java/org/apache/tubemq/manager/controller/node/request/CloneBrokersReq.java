@@ -30,5 +30,5 @@ public class CloneBrokersReq {
     private List<AddTopicReq> addTopicReqs;
     private String confModAuthToken;
     private String createUser;
-    private int clusterId;
+    private Long clusterId;
 }

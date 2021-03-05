@@ -26,7 +26,7 @@ import javax.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tubemq.manager.controller.cluster.request.AddClusterReq;
 import org.apache.tubemq.manager.entry.ClusterEntry;
-import org.apache.tubemq.manager.entry.NodeEntry;
+import org.apache.tubemq.manager.entry.MasterEntry;
 import org.apache.tubemq.manager.repository.ClusterRepository;
 import org.apache.tubemq.manager.service.interfaces.ClusterService;
 import org.apache.tubemq.manager.service.interfaces.NodeService;
@@ -85,14 +85,12 @@ public class ClusterServiceImpl implements ClusterService {
         if (clusterEntry == null) {
             return false;
         }
-        NodeEntry nodeEntry = new NodeEntry();
-        nodeEntry.setPort(req.getMasterPort());
-        nodeEntry.setMaster(true);
-        nodeEntry.setClusterId(clusterEntry.getClusterId());
-        nodeEntry.setWebPort(req.getMasterWebPort());
-        nodeEntry.setIp(req.getMasterIp());
-        nodeEntry.setBroker(false);
-        return nodeService.addNode(nodeEntry);
+        MasterEntry masterEntry = new MasterEntry();
+        masterEntry.setPort(req.getMasterPort());
+        masterEntry.setClusterId(clusterEntry.getClusterId());
+        masterEntry.setWebPort(req.getMasterWebPort());
+        masterEntry.setIp(req.getMasterIp());
+        return nodeService.addNode(masterEntry);
     }
 
 }

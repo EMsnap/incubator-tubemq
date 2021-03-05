@@ -17,19 +17,9 @@
 
 package org.apache.tubemq.manager.controller.node;
 
-import com.google.common.collect.Maps;
 import com.google.gson.Gson;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tubemq.corebase.TBaseConstants;
-import org.apache.tubemq.corebase.TokenConstants;
-import org.apache.tubemq.corebase.utils.AddressUtils;
-import org.apache.tubemq.corebase.utils.TStringUtils;
 import org.apache.tubemq.manager.controller.TubeMQResult;
 import org.apache.tubemq.manager.controller.node.request.AddBrokersReq;
 import org.apache.tubemq.manager.controller.node.request.BrokerSetReadOrWriteReq;
@@ -37,19 +27,16 @@ import org.apache.tubemq.manager.controller.node.request.CloneBrokersReq;
 import org.apache.tubemq.manager.controller.node.request.DeleteBrokerReq;
 import org.apache.tubemq.manager.controller.node.request.OnlineOfflineBrokerReq;
 import org.apache.tubemq.manager.controller.node.request.ReloadBrokerReq;
-import org.apache.tubemq.manager.repository.NodeRepository;
+import org.apache.tubemq.manager.repository.MasterRepository;
 import org.apache.tubemq.manager.service.interfaces.BrokerService;
 import org.apache.tubemq.manager.service.interfaces.MasterService;
 import org.apache.tubemq.manager.service.interfaces.NodeService;
-import org.apache.tubemq.server.common.utils.WebParameterUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-import static org.apache.tubemq.manager.controller.TubeMQResult.getErrorResult;
-import static java.lang.Math.abs;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.ADD;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.CLONE;
 import static org.apache.tubemq.manager.service.TubeMQHttpConst.DELETE;
@@ -71,7 +58,7 @@ public class NodeController {
     NodeService nodeService;
 
     @Autowired
-    NodeRepository nodeRepository;
+    MasterRepository masterRepository;
 
     @Autowired
     MasterService masterService;

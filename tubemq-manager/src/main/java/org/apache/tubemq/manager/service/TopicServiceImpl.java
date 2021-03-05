@@ -31,6 +31,8 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -41,12 +43,14 @@ import org.apache.tubemq.manager.controller.group.request.QueryOffsetReq;
 import org.apache.tubemq.manager.controller.group.result.AllBrokersOffsetRes;
 import org.apache.tubemq.manager.controller.group.result.AllBrokersOffsetRes.OffsetInfo;
 import org.apache.tubemq.manager.controller.group.result.OffsetQueryRes;
+import org.apache.tubemq.manager.controller.node.request.AddTopicReq;
 import org.apache.tubemq.manager.controller.node.request.CloneOffsetReq;
 import org.apache.tubemq.manager.controller.topic.request.RebalanceConsumerReq;
 import org.apache.tubemq.manager.controller.topic.request.RebalanceGroupReq;
-import org.apache.tubemq.manager.entry.NodeEntry;
+import org.apache.tubemq.manager.entry.MasterEntry;
 import org.apache.tubemq.manager.service.interfaces.MasterService;
 import org.apache.tubemq.manager.service.interfaces.TopicService;
+import org.apache.tubemq.manager.service.tube.AddTopicsResult;
 import org.apache.tubemq.manager.service.tube.CleanOffsetResult;
 import org.apache.tubemq.manager.service.tube.RebalanceGroupResult;
 import org.apache.tubemq.manager.service.tube.TubeHttpGroupDetailInfo;
@@ -73,8 +77,8 @@ public class TopicServiceImpl implements TopicService {
     private MasterService masterService;
 
     @Override
-    public TubeHttpGroupDetailInfo requestGroupRunInfo(NodeEntry nodeEntry, String group) {
-        String url = SCHEMA + nodeEntry.getIp() + ":" + nodeEntry.getWebPort()
+    public TubeHttpGroupDetailInfo requestGroupRunInfo(MasterEntry masterEntry, String group) {
+        String url = SCHEMA + masterEntry.getIp() + ":" + masterEntry.getWebPort()
             + QUERY_GROUP_DETAIL_INFO + "&consumeGroup=" + group;
         HttpGet httpget = new HttpGet(url);
         try (CloseableHttpResponse response = httpclient.execute(httpget)) {
@@ -94,7 +98,7 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public TubeMQResult cloneOffsetToOtherGroups(CloneOffsetReq req) {
 
-        NodeEntry master = masterService.getMasterNode(req);
+        MasterEntry master = masterService.getMasterNode(req.getClusterId());
         if (master == null) {
             return TubeMQResult.errorResult("no such cluster");
         }
@@ -123,8 +127,8 @@ public class TopicServiceImpl implements TopicService {
 
 
     @Override
-    public TubeHttpTopicInfoList requestTopicConfigInfo(NodeEntry nodeEntry, String topic) {
-        String url = SCHEMA + nodeEntry.getIp() + ":" + nodeEntry.getWebPort()
+    public TubeHttpTopicInfoList requestTopicConfigInfo(MasterEntry masterEntry, String topic) {
+        String url = SCHEMA + masterEntry.getIp() + ":" + masterEntry.getWebPort()
             + TOPIC_CONFIG_INFO + "&topicName=" + topic;
         HttpGet httpget = new HttpGet(url);
         try (CloseableHttpResponse response = httpclient.execute(httpget)) {
@@ -144,7 +148,7 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public TubeMQResult rebalanceGroup(RebalanceGroupReq req) {
 
-        NodeEntry master = masterService.getMasterNode(req);
+        MasterEntry master = masterService.getMasterNode(req.getClusterId());
         if (master == null) {
             return TubeMQResult.errorResult("no such cluster");
         }
@@ -177,7 +181,7 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public TubeMQResult deleteOffset(DeleteOffsetReq req) {
 
-        NodeEntry master = masterService.getMasterNode(req);
+        MasterEntry master = masterService.getMasterNode(req.getClusterId());
         if (master == null) {
             return TubeMQResult.errorResult("no such cluster");
         }
@@ -212,7 +216,7 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public TubeMQResult queryOffset(QueryOffsetReq req) {
 
-        NodeEntry master = masterService.getMasterNode(req);
+        MasterEntry master = masterService.getMasterNode(req.getClusterId());
         if (master == null) {
             return TubeMQResult.errorResult("no such cluster");
         }
@@ -252,5 +256,42 @@ public class TopicServiceImpl implements TopicService {
         offsetInfo.setBrokerId(topicInfo.getBrokerId());
         offsetInfo.setOffsetQueryRes(res);
         offsetPerBroker.add(offsetInfo);
+    }
+
+
+    @Override
+    public TubeMQResult addTopicsToBrokers(MasterEntry masterEntry, List<Long> brokerIds,
+        List<AddTopicReq> addTopicReqs) {
+        TubeMQResult tubeResult = new TubeMQResult();
+        AddTopicsResult addTopicsResult = new AddTopicsResult();
+
+        if (CollectionUtils.isEmpty(addTopicReqs)) {
+            return tubeResult;
+        }
+        addTopicReqs.forEach(addTopicReq -> {
+            try {
+                String brokerStr = StringUtils.join(brokerIds, ",");
+                addTopicReq.setBrokerId(brokerStr);
+                TubeMQResult result = addTopicToBrokers(addTopicReq, masterEntry);
+                if (result.getErrCode() == SUCCESS_CODE) {
+                    addTopicsResult.getSuccessTopics().add(addTopicReq.getTopicName());
+                } else {
+                    addTopicsResult.getFailTopics().add(addTopicReq.getTopicName());
+                }
+            } catch (Exception e) {
+                log.error("add topic to brokers fail with exception", e);
+                addTopicsResult.getFailTopics().add(addTopicReq.getTopicName());
+            }
+        });
+
+        tubeResult.setData(gson.toJson(addTopicsResult));
+        return tubeResult;
+    }
+
+    @Override
+    public TubeMQResult addTopicToBrokers(AddTopicReq req, MasterEntry masterEntry) throws Exception {
+        String url = SCHEMA + masterEntry.getIp() + ":" + masterEntry.getWebPort()
+            + "/" + TUBE_REQUEST_PATH + "?" + convertReqToQueryStr(req);
+        return masterService.requestMaster(url);
     }
 }

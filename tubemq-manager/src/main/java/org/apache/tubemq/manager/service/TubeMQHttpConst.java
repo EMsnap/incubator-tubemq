@@ -54,4 +54,6 @@ public class TubeMQHttpConst {
     public static final Integer DELETE_FAIL = 0;
     public static final String QUERY = "query";
     public static final Long DEFAULT_REGION = 0L;
+    public static final String DEFAULT_CONF_MOD_AUTH_TOKEN = "abc";
+
 }

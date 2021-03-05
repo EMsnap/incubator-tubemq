@@ -19,8 +19,12 @@ package org.apache.tubemq.manager.service.interfaces;
 
 import java.util.List;
 import org.apache.tubemq.manager.controller.TubeMQResult;
+import org.apache.tubemq.manager.controller.node.request.CloneBrokersReq;
+import org.apache.tubemq.manager.entry.BrokerEntry;
 
 public interface BrokerService {
+
+    TubeMQResult createBroker(long clusterId, BrokerEntry brokerEntry);
 
     /**
      * reset the brokers in a region to be default region
@@ -53,11 +57,16 @@ public interface BrokerService {
      */
     List<Long> getBrokerIdListInRegion(long regionId, long cluster);
 
+    TubeMQResult cloneBrokersWithTopic(CloneBrokersReq req) throws Exception;
+
+    List<BrokerEntry> getOnlineBrokerConfigs(long clusterId);
+
     /**
-     *
-     * @param regionId
+     * batch add brokers to a cluster and send req to master
+     * if add to db fail, fail
      * @param clusterId
+     * @param brokerEntries
      * @return
      */
-    TubeMQResult createBroker(long regionId, long clusterId);
+    TubeMQResult batchAddNewBrokers(long clusterId, List<BrokerEntry> brokerEntries);
 }

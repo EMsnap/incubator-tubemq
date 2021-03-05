@@ -34,8 +34,8 @@ import org.apache.tubemq.manager.controller.TubeMQResult;
 import org.apache.tubemq.manager.controller.cluster.request.AddClusterReq;
 import org.apache.tubemq.manager.controller.cluster.request.DeleteClusterReq;
 import org.apache.tubemq.manager.entry.ClusterEntry;
-import org.apache.tubemq.manager.entry.NodeEntry;
-import org.apache.tubemq.manager.repository.NodeRepository;
+import org.apache.tubemq.manager.entry.MasterEntry;
+import org.apache.tubemq.manager.repository.MasterRepository;
 import org.apache.tubemq.manager.service.interfaces.ClusterService;
 import org.apache.tubemq.manager.service.interfaces.MasterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +56,7 @@ public class ClusterController {
     private final Gson gson = new Gson();
 
     @Autowired
-    private NodeRepository nodeRepository;
+    private MasterRepository masterRepository;
 
     @Autowired
     private ClusterService clusterService;
@@ -162,9 +162,9 @@ public class ClusterController {
         int clusterId = Integer.parseInt(requestBody.get("clusterId"));
         if (StringUtils.isNotBlank(token)) {
             requestBody.remove("clusterId");
-            NodeEntry nodeEntry = nodeRepository.findNodeEntryByClusterIdIsAndMasterIsTrue(
+            MasterEntry masterEntry = masterRepository.getMasterEntryByClusterIdEquals(
                     clusterId);
-            String url = SCHEMA + nodeEntry.getIp() + ":" + nodeEntry.getWebPort()
+            String url = SCHEMA + masterEntry.getIp() + ":" + masterEntry.getWebPort()
                     + "/" + TUBE_REQUEST_PATH + "?" + covertMapToQueryString(requestBody);
             return gson.toJson(masterService.requestMaster(url));
         } else {

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,16 +15,22 @@
  * limitations under the License.
  */
 
-package org.apache.tubemq.manager.service.tube;
+package org.apache.tubemq.manager.repository;
 
-import lombok.Data;
+import org.apache.tubemq.manager.entry.MasterEntry;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Data
-public class AddBrokerResult {
-    private int code;
-    private String errMsg;
-    private int errCode;
-    private List<IpIdRelation> data;
+@Repository
+public interface MasterRepository extends JpaRepository<MasterEntry, Long> {
+
+    /**
+     * find master By clusterId
+     * @param clusterId
+     * @return
+     */
+    MasterEntry getMasterEntryByClusterIdEquals(long clusterId);
+
 }

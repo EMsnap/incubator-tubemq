@@ -21,7 +21,9 @@ package org.apache.tubemq.manager.service.interfaces;
 import java.util.Map;
 import org.apache.tubemq.manager.controller.TubeMQResult;
 import org.apache.tubemq.manager.controller.node.request.BaseReq;
-import org.apache.tubemq.manager.entry.NodeEntry;
+import org.apache.tubemq.manager.controller.node.request.QueryBrokerCfgReq;
+import org.apache.tubemq.manager.entry.MasterEntry;
+import org.apache.tubemq.manager.service.tube.OpBrokerResult;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -50,10 +52,10 @@ public interface MasterService {
 
     /**
      * get the master node in the cluster
-     * @param req
+     * @param clusterId
      * @return
      */
-    NodeEntry getMasterNode(BaseReq req);
+    MasterEntry getMasterNode(Long clusterId);
 
     /**
      * use queryBody to generate queryUrl for master query
@@ -70,4 +72,9 @@ public interface MasterService {
      * @return
      */
     TubeMQResult checkMasterNodeStatus(String masterIp, Integer masterPort);
+
+
+    String getQueryUrl(MasterEntry masterEntry, Object req);
+
+    OpBrokerResult addBrokersToCluster(String url);
 }

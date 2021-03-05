@@ -28,18 +28,14 @@ import lombok.Data;
  * node machine for tube cluster. broker/master/standby
  */
 @Entity
-@Table(name = "node")
+@Table(name = "master")
 @Data
-public class NodeEntry {
+public class MasterEntry {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private long id;
 
-    private boolean master;
-
     private boolean standby;
-
-    private boolean broker;
 
     private String ip;
 
@@ -49,5 +45,5 @@ public class NodeEntry {
 
     private long clusterId;
 
-    private String clusterName;
+    private String token;
 }

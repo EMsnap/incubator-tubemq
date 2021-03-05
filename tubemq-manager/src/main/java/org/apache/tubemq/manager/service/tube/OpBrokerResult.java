@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,34 +15,37 @@
  * limitations under the License.
  */
 
-package org.apache.tubemq.manager.repository;
+package org.apache.tubemq.manager.service.tube;
 
-import org.apache.tubemq.manager.entry.NodeEntry;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import com.google.common.collect.Lists;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 
 import java.util.List;
+import lombok.NoArgsConstructor;
 
-@Repository
-public interface NodeRepository extends JpaRepository<NodeEntry, Long> {
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class OpBrokerResult {
+    private int code;
+    private String errMsg;
+    private int errCode;
+    private List<IpIdRelation> data;
 
-    /**
-     * find master By clusterId
-     * @param clusterId
-     * @return
-     */
-    NodeEntry findNodeEntryByClusterIdIsAndMasterIsTrue(long clusterId);
+    public List<Long> getBrokerIds() {
+        List<IpIdRelation> ipids = data;
+        List<Long> brokerIds = Lists.newArrayList();
+        for (IpIdRelation ipid : ipids) {
+            brokerIds.add(ipid.getId());
+        }
+        return brokerIds;
+    }
 
-    /**
-     * find all nodes in cluster
-     * @param clusterId
-     * @return
-     */
-    List<NodeEntry> findNodeEntriesByClusterIdIs(long clusterId);
-
-    /**
-     * find all nodes
-     * @return
-     */
-    List<NodeEntry> findAll();
+    public static OpBrokerResult errorResult(String errorMsg) {
+        return OpBrokerResult.builder().errCode(-1)
+            .errMsg(errorMsg).build();
+    }
 }
